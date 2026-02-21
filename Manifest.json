@@ -1,0 +1,15 @@
+{
+  "name": "Мои внешние субтитры",
+  "description": "Плагин для загрузки и подключения внешних субтитров прямо из плеера.",
+  "version": "1.0.0",
+  "author": "YourName",
+  "type": "user",
+  "icon": "https://cdn-icons-png.flaticon.com/512/2115/2115949.png",
+  "item": [
+    {
+      "name": "Субтитры",
+      "description": "Настройка источников субтитров",
+      "url": "mysubtitles"
+    }
+  ]
+}
