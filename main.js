@@ -1,7 +1,19 @@
 (function() {
     var plugin_name = 'lordserials_plugin';
-    if (window[plugin_name]) return;
+    if (window[plugin_name]) {
+        console.error('[LordSerials] Плагин уже загружен! Выход.');
+        return;
+    }
     window[plugin_name] = true;
+    
+    console.log('[LordSerials] ========================================');
+    console.log('[LordSerials] ЗАГРУЗКА ПЛАГИНА НАЧАЛАСЬ');
+    console.log('[LordSerials] window:', !!window);
+    console.log('[LordSerials] window.Lampa:', !!window.Lampa);
+    console.log('[LordSerials] Lampa.Activity:', !!(window.Lampa && window.Lampa.Activity));
+    console.log('[LordSerials] Lampa.Component:', !!(window.Lampa && window.Lampa.Component));
+    console.log('[LordSerials] Lampa.Settings:', !!(window.Lampa && window.Lampa.Settings));
+    console.log('[LordSerials] ========================================');
 
     // Конфигурация плагина
     var CONFIG = {
@@ -12,9 +24,14 @@
     };
 
     function startPlugin() {
-        console.log('[LordSerials] Запуск плагина...');
+        console.log('[LordSerials] startPlugin ВЫЗВАН!');
+        console.log('[LordSerials] Lampa:', window.Lampa ? 'найден' : 'НЕ НАЙДЕН');
         
         // Проверяем наличие необходимых модулей Lampa
+        if (!window.Lampa) {
+            console.error('[LordSerials] Lampa не найден!');
+            return;
+        }
         if (!Lampa.Activity) {
             console.error('[LordSerials] Lampa.Activity не найден!');
             return;
@@ -36,6 +53,7 @@
         registerSerialComponent();
         
         console.log('[LordSerials] Плагин успешно инициализирован');
+        console.log('[LordSerials] ========================================');
     }
 
     // ============================================
@@ -748,13 +766,25 @@
     // ============================================
     // ЗАПУСК ПЛАГИНА
     // ============================================
+    console.log('[LordSerials] Проверка запуска...');
+    console.log('[LordSerials] window.appready:', window.appready);
+    console.log('[LordSerials] Lampa.Listener:', !!window.Lampa?.Listener);
+    
     if (window.appready) {
+        console.log('[LordSerials] appready=true, запускаем startPlugin()');
         startPlugin();
     } else {
-        Lampa.Listener.follow('app', function(e) {
-            if (e.type == 'ready') {
-                startPlugin();
-            }
-        });
+        console.log('[LordSerials] appready=false, подписываемся на Lampa.Listener');
+        if (Lampa && Lampa.Listener) {
+            Lampa.Listener.follow('app', function(e) {
+                console.log('[LordSerials] Событие app:', e.type);
+                if (e.type == 'ready') {
+                    console.log('[LordSerials] app.ready, запускаем startPlugin()');
+                    startPlugin();
+                }
+            });
+        } else {
+            console.error('[LordSerials] Lampa.Listener не найден!');
+        }
     }
 })();
