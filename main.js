@@ -158,14 +158,14 @@
             
             var self = this;
             var searchResults = [];
+            var mainContainer = null;
 
             this.create = function() {
                 console.log('[LordSerials] Component create вызван');
                 self.activity.loader(true);
                 
-                // Создаем интерфейс поиска напрямую
-                var html = createSearchInterface();
-                self.html = html;
+                // Создаем интерфейс поиска
+                mainContainer = createSearchInterface();
                 
                 self.activity.loader(false);
                 console.log('[LordSerials] Component create завершен');
@@ -173,7 +173,7 @@
 
             this.render = function() {
                 console.log('[LordSerials] Component render вызван');
-                return self.html || $('<div></div>');
+                return mainContainer || $('<div class="activity"><div class="activity__content">Загрузка...</div></div>');
             };
 
             this.start = function() {
@@ -181,8 +181,6 @@
                 Lampa.Controller.add('lordserials_search', {
                     toggle: function() {
                         console.log('[LordSerials] Controller toggle');
-                        // Не используем focus, так как это вызывает ошибку
-                        // Просто активируем контроллер
                     },
                     back: function() {
                         console.log('[LordSerials] Controller back');
@@ -195,7 +193,7 @@
             function createSearchInterface() {
                 console.log('[LordSerials] Создаем интерфейс поиска');
                 
-                var wrapper = $('<div class="activity" style="background:#0f0f0f;min-height:100vh;padding:20px;"></div>');
+                var wrapper = $('<div class="activity"><div class="activity__content" style="background:#0f0f0f;min-height:100vh;padding:20px;"></div></div>');
                 var container = $('<div id="lordserials-search-container" style="max-width:1200px;margin:0 auto;"></div>');
                 
                 // Заголовок
@@ -214,7 +212,7 @@
                 var resultsGrid = $('<div id="lordserials-results" class="cards-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:20px;"></div>');
                 container.append(resultsGrid);
                 
-                wrapper.append(container);
+                wrapper.find('.activity__content').append(container);
 
                 // Обработчик поиска - используем jQuery.on('click')
                 setTimeout(function() {
@@ -393,14 +391,14 @@
             var serialData = object.data || {};
             var playerUrl = '';
             var episodes = [];
+            var mainContainer = null;
 
             this.create = function() {
                 console.log('[LordSerials] Component create вызван', serialData);
                 self.activity.loader(true);
                 
-                // Создаем интерфейс напрямую
-                var html = createSerialInterface();
-                self.html = html;
+                // Создаем интерфейс
+                mainContainer = createSerialInterface();
                 
                 console.log('[LordSerials] Загрузка сериала:', serialData.url);
                 loadSerialPage(serialData.url);
@@ -408,7 +406,7 @@
 
             this.render = function() {
                 console.log('[LordSerials] Component render вызван');
-                return self.html || $('<div></div>');
+                return mainContainer || $('<div class="activity"><div class="activity__content">Загрузка...</div></div>');
             };
 
             this.start = function() {
@@ -416,7 +414,6 @@
                 Lampa.Controller.add('lordserials_serial', {
                     toggle: function() {
                         console.log('[LordSerials] Controller toggle');
-                        // Не используем focus
                     },
                     back: function() {
                         console.log('[LordSerials] Controller back');
@@ -427,7 +424,9 @@
             };
             
             function createSerialInterface() {
-                return $('<div class="activity" style="background:#0f0f0f;min-height:100vh;"></div>');
+                console.log('[LordSerials] Создаем интерфейс сериала');
+                var wrapper = $('<div class="activity"><div class="activity__content" style="background:#0f0f0f;min-height:100vh;"></div></div>');
+                return wrapper;
             }
 
             function loadSerialPage(url) {
@@ -535,7 +534,12 @@
             function displaySerialInterface(videoUrl, episodes) {
                 console.log('[LordSerials] Отображаем интерфейс сериала');
                 
-                var container = self.html || $('.activity');
+                // Находим контейнер внутри mainContainer
+                var container = mainContainer.find('.activity__content');
+                if (container.length === 0) {
+                    console.error('[LordSerials] activity__content не найден!');
+                    return;
+                }
                 container.empty();
 
                 // Заголовок

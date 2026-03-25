@@ -2,7 +2,10 @@
   "permissions": {
     "allow": [
       "WebFetch(lordserials.cc)",
-      "WebFetch(lordserial.gg)"
+      "WebFetch(lordserial.gg)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push)"
     ]
   }
 }
