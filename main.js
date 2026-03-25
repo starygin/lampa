@@ -76,31 +76,22 @@
     function addMenuItem() {
         console.log('[LordSerials] addMenuItem ВЫЗВАН!');
         
-        // Метод 1: Через Lampa.Settings (официальный способ)
-        if (Lampa.Settings && Lampa.Settings.add) {
-            console.log('[LordSerials] Добавляем через Lampa.Settings.add');
-            Lampa.Settings.add({
-                key: CONFIG.pluginId,
-                name: 'LordSerials',
-                description: 'Сериалы с lordserials.fan',
-                icon: '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/></svg>'
-            });
-            console.log('[LordSerials] Lampa.Settings.add выполнен');
-        } else {
-            console.error('[LordSerials] Lampa.Settings.add НЕ доступен!');
-        }
-
-        // Метод 2: Прямое добавление в DOM с наблюдателем
+        // Проверяем Lampa.Settings
+        console.log('[LordSerials] Lampa.Settings:', !!Lampa.Settings);
+        console.log('[LordSerials] Lampa.Settings.add:', !!(Lampa.Settings && Lampa.Settings.add));
+        
+        // Добавляем кнопку напрямую в главное меню
         setTimeout(function addMenuButton() {
             console.log('[LordSerials] addMenuButton вызван (setTimeout)');
             
+            // Ищем главное меню
             var menu = $('.menu .menu__list').eq(0);
             console.log('[LordSerials] Меню найдено:', menu.length > 0, 'menu.length:', menu.length);
             
             if (menu.length > 0 && !document.querySelector('#lordserials-menu-item')) {
                 console.log('[LordSerials] Создаем кнопку меню');
                 
-                var buttonHtml = '<div class="menu__item" id="lordserials-menu-item">' +
+                var buttonHtml = '<div class="menu__item" id="lordserials-menu-item" style="cursor:pointer;">' +
                     '<a>' +
                     '<span class="menu__icon"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width:24px;height:24px;fill:currentColor"><path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/></svg></span>' +
                     '<span class="menu__text">LordSerials</span>' +
@@ -109,16 +100,13 @@
                 
                 var button = $(buttonHtml);
 
-                // Используем jQuery.on('click') вместо addEventListener
                 button.on('click', function(e) {
-                    console.log('[LordSerials] Клик по кнопке меню (jQuery)!');
+                    console.log('[LordSerials] Клик по кнопке меню!');
                     e.preventDefault();
                     e.stopPropagation();
                     
-                    console.log('[LordSerials] Lampa.Activity:', Lampa.Activity);
-                    console.log('[LordSerials] Вызов Activity.push...');
-                    
                     try {
+                        console.log('[LordSerials] Вызов Lampa.Activity.push...');
                         Lampa.Activity.push({
                             url: CONFIG.pluginId,
                             title: 'LordSerials - Поиск сериалов',
@@ -138,19 +126,18 @@
                 menu.append(button);
                 console.log('[LordSerials] Кнопка добавлена в меню');
             } else if (menu.length === 0) {
-                // Меню еще не готово, пробуем еще раз
                 console.log('[LordSerials] Меню не найдено, пробуем еще раз через 500мс');
                 setTimeout(addMenuButton, 500);
             }
         }, 500);
         
-        // Метод 3: Наблюдатель на случай если меню динамическое
+        // Наблюдатель на случай если меню динамическое
         var observer = new MutationObserver(function(mutations) {
             var menu = $('.menu .menu__list').eq(0);
             if (menu.length > 0 && !document.querySelector('#lordserials-menu-item')) {
-                console.log('[LordSerials] Observer: меню обнаружено, добавляем кнопку');
+                console.log('[LordSerials] Observer: меню обнаружено');
                 
-                var buttonHtml = '<div class="menu__item" id="lordserials-menu-item">' +
+                var buttonHtml = '<div class="menu__item" id="lordserials-menu-item" style="cursor:pointer;">' +
                     '<a>' +
                     '<span class="menu__icon"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width:24px;height:24px;fill:currentColor"><path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/></svg></span>' +
                     '<span class="menu__text">LordSerials</span>' +
