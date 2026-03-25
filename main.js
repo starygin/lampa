@@ -27,58 +27,75 @@
         console.log('[LordSerials] startPlugin ВЫЗВАН!');
         console.log('[LordSerials] Lampa:', window.Lampa ? 'найден' : 'НЕ НАЙДЕН');
         
-        // Проверяем наличие необходимых модулей Lampa
-        if (!window.Lampa) {
-            console.error('[LordSerials] Lampa не найден!');
-            return;
-        }
-        if (!Lampa.Activity) {
-            console.error('[LordSerials] Lampa.Activity не найден!');
-            return;
-        }
-        if (!Lampa.Component) {
-            console.error('[LordSerials] Lampa.Component не найден!');
-            return;
-        }
-        
-        console.log('[LordSerials] Все модули Lampa доступны');
+        try {
+            // Проверяем наличие необходимых модулей Lampa
+            if (!window.Lampa) {
+                console.error('[LordSerials] Lampa не найден!');
+                return;
+            }
+            if (!Lampa.Activity) {
+                console.error('[LordSerials] Lampa.Activity не найден!');
+                return;
+            }
+            if (!Lampa.Component) {
+                console.error('[LordSerials] Lampa.Component не найден!');
+                return;
+            }
+            
+            console.log('[LordSerials] Все модули Lampa доступны');
+            
+            // Пробуем добавить тестовое сообщение через Noty
+            if (Lampa.Noty) {
+                Lampa.Noty.show('LordSerials загружен!');
+                console.log('[LordSerials] Noty.show вызван');
+            }
 
-        // Добавляем пункт в главное меню
-        addMenuItem();
+            // Добавляем пункт в главное меню
+            console.log('[LordSerials] Вызов addMenuItem...');
+            addMenuItem();
 
-        // Регистрируем компонент для экрана поиска
-        registerSearchComponent();
+            // Регистрируем компонент для экрана поиска
+            console.log('[LordSerials] Вызов registerSearchComponent...');
+            registerSearchComponent();
 
-        // Регистрируем компонент для просмотра сериала
-        registerSerialComponent();
-        
-        console.log('[LordSerials] Плагин успешно инициализирован');
-        console.log('[LordSerials] ========================================');
+            // Регистрируем компонент для просмотра сериала
+            console.log('[LordSerials] Вызов registerSerialComponent...');
+            registerSerialComponent();
+            
+            console.log('[LordSerials] Плагин успешно инициализирован');
+            console.log('[LordSerials] ========================================');
+        } catch(err) {
+            console.error('[LordSerials] Ошибка в startPlugin:', err);
+            console.error('[LordSerials] Stack:', err.stack);
+        }
     }
 
     // ============================================
     // ДОБАВЛЕНИЕ В МЕНЮ
     // ============================================
     function addMenuItem() {
-        console.log('[LordSerials] Добавляем пункт меню...');
+        console.log('[LordSerials] addMenuItem ВЫЗВАН!');
         
         // Метод 1: Через Lampa.Settings (официальный способ)
         if (Lampa.Settings && Lampa.Settings.add) {
+            console.log('[LordSerials] Добавляем через Lampa.Settings.add');
             Lampa.Settings.add({
                 key: CONFIG.pluginId,
                 name: 'LordSerials',
                 description: 'Сериалы с lordserials.fan',
                 icon: '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/></svg>'
             });
-            console.log('[LordSerials] Пункт добавлен через Lampa.Settings');
+            console.log('[LordSerials] Lampa.Settings.add выполнен');
+        } else {
+            console.error('[LordSerials] Lampa.Settings.add НЕ доступен!');
         }
 
         // Метод 2: Прямое добавление в DOM с наблюдателем
         setTimeout(function addMenuButton() {
-            console.log('[LordSerials] Пробуем добавить кнопку в меню...');
+            console.log('[LordSerials] addMenuButton вызван (setTimeout)');
             
             var menu = $('.menu .menu__list').eq(0);
-            console.log('[LordSerials] Меню найдено:', menu.length > 0);
+            console.log('[LordSerials] Меню найдено:', menu.length > 0, 'menu.length:', menu.length);
             
             if (menu.length > 0 && !document.querySelector('#lordserials-menu-item')) {
                 console.log('[LordSerials] Создаем кнопку меню');
@@ -111,7 +128,10 @@
                         console.log('[LordSerials] Activity.push успешен');
                     } catch(err) {
                         console.error('[LordSerials] Ошибка Activity.push:', err);
-                        Lampa.Noty.show('Ошибка: ' + err.message);
+                        console.error('[LordSerials] Stack:', err.stack);
+                        if (Lampa.Noty) {
+                            Lampa.Noty.show('Ошибка: ' + err.message);
+                        }
                     }
                 });
 
