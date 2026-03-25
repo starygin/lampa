@@ -13,6 +13,18 @@
 
     function startPlugin() {
         console.log('[LordSerials] Запуск плагина...');
+        
+        // Проверяем наличие необходимых модулей Lampa
+        if (!Lampa.Activity) {
+            console.error('[LordSerials] Lampa.Activity не найден!');
+            return;
+        }
+        if (!Lampa.Component) {
+            console.error('[LordSerials] Lampa.Component не найден!');
+            return;
+        }
+        
+        console.log('[LordSerials] Все модули Lampa доступны');
 
         // Добавляем пункт в главное меню
         addMenuItem();
@@ -22,12 +34,17 @@
 
         // Регистрируем компонент для просмотра сериала
         registerSerialComponent();
+        
+        console.log('[LordSerials] Плагин успешно инициализирован');
     }
 
     // ============================================
     // ДОБАВЛЕНИЕ В МЕНЮ
     // ============================================
     function addMenuItem() {
+        console.log('[LordSerials] Добавляем пункт меню...');
+        
+        // Метод 1: Через Lampa.Settings (официальный способ)
         if (Lampa.Settings && Lampa.Settings.add) {
             Lampa.Settings.add({
                 key: CONFIG.pluginId,
@@ -35,12 +52,19 @@
                 description: 'Сериалы с lordserials.fan',
                 icon: '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/></svg>'
             });
+            console.log('[LordSerials] Пункт добавлен через Lampa.Settings');
         }
 
-        // Добавляем кнопку в меню категорий
-        setTimeout(function() {
+        // Метод 2: Прямое добавление в DOM с наблюдателем
+        setTimeout(function addMenuButton() {
+            console.log('[LordSerials] Пробуем добавить кнопку в меню...');
+            
             var menu = $('.menu .menu__list').eq(0);
+            console.log('[LordSerials] Меню найдено:', menu.length > 0);
+            
             if (menu.length > 0 && !document.querySelector('#lordserials-menu-item')) {
+                console.log('[LordSerials] Создаем кнопку меню');
+                
                 var button = $('<div class="menu__item" id="lordserials-menu-item">' +
                     '<a>' +
                     '<span class="menu__icon"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width:24px;height:24px;fill:currentColor"><path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/></svg></span>' +
@@ -48,7 +72,25 @@
                     '</a>' +
                     '</div>');
 
-                button.on('hover:enter', function() {
+                button.on('hover:enter', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('[LordSerials] Клик по кнопке меню!');
+                    
+                    Lampa.Activity.push({
+                        url: CONFIG.pluginId,
+                        title: 'LordSerials - Поиск сериалов',
+                        component: 'lordserials_search',
+                        page: 1
+                    });
+                });
+                
+                // Добавляем обработку touch событий для мобильных
+                button.on('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('[LordSerials] Touch клик по кнопке меню!');
+                    
                     Lampa.Activity.push({
                         url: CONFIG.pluginId,
                         title: 'LordSerials - Поиск сериалов',
@@ -58,40 +100,89 @@
                 });
 
                 menu.append(button);
+                console.log('[LordSerials] Кнопка добавлена в меню');
+            } else if (menu.length === 0) {
+                // Меню еще не готово, пробуем еще раз
+                console.log('[LordSerials] Меню не найдено, пробуем еще раз через 500мс');
+                setTimeout(addMenuButton, 500);
             }
-        }, 1000);
+        }, 500);
+        
+        // Метод 3: Наблюдатель на случай если меню динамическое
+        var observer = new MutationObserver(function(mutations) {
+            var menu = $('.menu .menu__list').eq(0);
+            if (menu.length > 0 && !document.querySelector('#lordserials-menu-item')) {
+                console.log('[LordSerials] Observer: меню обнаружено, добавляем кнопку');
+                
+                var button = $('<div class="menu__item" id="lordserials-menu-item">' +
+                    '<a>' +
+                    '<span class="menu__icon"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width:24px;height:24px;fill:currentColor"><path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/></svg></span>' +
+                    '<span class="menu__text">LordSerials</span>' +
+                    '</a>' +
+                    '</div>');
+
+                button.on('hover:enter click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('[LordSerials] Observer: клик по кнопке');
+                    
+                    Lampa.Activity.push({
+                        url: CONFIG.pluginId,
+                        title: 'LordSerials - Поиск сериалов',
+                        component: 'lordserials_search',
+                        page: 1
+                    });
+                });
+
+                menu.append(button);
+                console.log('[LordSerials] Observer: кнопка добавлена');
+            }
+        });
+        
+        observer.observe(document.body, { childList: true, subtree: true });
+        console.log('[LordSerials] Observer запущен');
     }
 
     // ============================================
     // КОМПОНЕНТ ПОИСКА
     // ============================================
     function registerSearchComponent() {
+        console.log('[LordSerials] Регистрируем компонент поиска...');
+        
         Lampa.Component.add('lordserials_search', function(object) {
+            console.log('[LordSerials] Создаем компонент поиска', object);
+            
             var self = this;
-            var html = Lampa.Template.js('lordserials_search_template');
-            var searchInput = '';
             var searchResults = [];
 
             this.create = function() {
+                console.log('[LordSerials] Component create вызван');
                 self.activity.loader(true);
                 
-                // Создаем интерфейс поиска
-                var searchInterface = createSearchInterface();
-                $(html).find('#lordserials-search-container').html(searchInterface);
+                // Создаем интерфейс поиска напрямую
+                var html = createSearchInterface();
+                self.html = html;
                 
                 self.activity.loader(false);
+                console.log('[LordSerials] Component create завершен');
             };
 
             this.render = function() {
-                return html;
+                console.log('[LordSerials] Component render вызван');
+                return self.html || $('<div></div>');
             };
 
             this.start = function() {
+                console.log('[LordSerials] Component start вызван');
                 Lampa.Controller.add('lordserials_search', {
                     toggle: function() {
-                        Lampa.Controller.focus('lordserials_search_input');
+                        console.log('[LordSerials] Controller toggle');
+                        setTimeout(function() {
+                            Lampa.Controller.focus('lordserials_search_input');
+                        }, 100);
                     },
                     back: function() {
+                        console.log('[LordSerials] Controller back');
                         Lampa.Activity.backward();
                     }
                 });
@@ -99,145 +190,153 @@
             };
 
             function createSearchInterface() {
-                var container = $('<div id="lordserials-search-container" style="padding:20px;"></div>');
+                console.log('[LordSerials] Создаем интерфейс поиска');
                 
+                var wrapper = $('<div class="activity" style="background:#0f0f0f;min-height:100vh;padding:20px;"></div>');
+                var container = $('<div id="lordserials-search-container" style="max-width:1200px;margin:0 auto;"></div>');
+                
+                // Заголовок
+                var header = $('<h1 style="font-size:28px;font-weight:700;margin-bottom:30px;color:#fff;">Поиск сериалов</h1>');
+                container.append(header);
+
                 // Поле ввода поиска
-                var searchBox = $('<div class="settings-input" style="margin-bottom:20px;">' +
-                    '<input type="text" id="lordserials_search_input" class="settings-input__field" placeholder="Введите название сериала..." style="width:100%;padding:15px;font-size:18px;">' +
-                    '<button id="lordserials_search_btn" class="settings-input__button" style="margin-top:10px;padding:15px 30px;font-size:16px;">Найти</button>' +
+                var searchBox = $('<div class="settings-input" style="margin-bottom:30px;">' +
+                    '<input type="text" id="lordserials_search_input" class="settings-input__field" placeholder="Введите название сериала..." style="width:100%;padding:15px;font-size:18px;background:#1a1a1a;color:#fff;border:1px solid #333;border-radius:8px;">' +
+                    '<button id="lordserials_search_btn" class="settings-input__button" style="margin-top:15px;padding:15px 40px;font-size:16px;background:#e50914;color:#fff;border:none;border-radius:8px;cursor:pointer;">Найти</button>' +
                     '</div>');
-                
+
                 container.append(searchBox);
-                
+
                 // Результаты поиска
                 var resultsGrid = $('<div id="lordserials-results" class="cards-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:20px;"></div>');
                 container.append(resultsGrid);
                 
+                wrapper.append(container);
+
                 // Обработчик поиска
-                searchBox.find('#lordserials_search_btn').on('hover:enter', function() {
-                    var query = searchBox.find('#lordserials_search_input').val().trim();
-                    if (query.length > 0) {
-                        performSearch(query);
-                    }
-                });
-                
-                // Поддержка Enter
-                searchBox.find('#lordserials_search_input').on('keydown', function(e) {
-                    if (e.keyCode === 13) {
-                        var query = $(this).val().trim();
+                setTimeout(function() {
+                    console.log('[LordSerials] Вешаем обработчики на кнопку поиска');
+                    
+                    searchBox.find('#lordserials_search_btn').on('hover:enter', function(e) {
+                        e.preventDefault();
+                        var query = searchBox.find('#lordserials_search_input').val().trim();
+                        console.log('[LordSerials] Клик hover:enter, query:', query);
                         if (query.length > 0) {
                             performSearch(query);
                         }
-                    }
-                });
-                
-                return container;
+                    });
+                    
+                    searchBox.find('#lordserials_search_btn').on('click', function(e) {
+                        e.preventDefault();
+                        var query = searchBox.find('#lordserials_search_input').val().trim();
+                        console.log('[LordSerials] Клик click, query:', query);
+                        if (query.length > 0) {
+                            performSearch(query);
+                        }
+                    });
+
+                    // Поддержка Enter
+                    searchBox.find('#lordserials_search_input').on('keydown', function(e) {
+                        if (e.keyCode === 13) {
+                            var query = $(this).val().trim();
+                            console.log('[LordSerials] Enter нажат, query:', query);
+                            if (query.length > 0) {
+                                performSearch(query);
+                            }
+                        }
+                    });
+                }, 100);
+
+                return wrapper;
             }
 
             function performSearch(query) {
+                console.log('[LordSerials] Выполняем поиск:', query);
                 self.activity.loader(true);
-                console.log('[LordSerials] Поиск:', query);
                 
                 // Используем прокси для обхода CORS
-                var searchUrl = CONFIG.baseUrl + '/index.php?do=search';
+                var searchUrl = CONFIG.baseUrl + '/index.php?do=search&subaction=search&story=' + encodeURIComponent(query);
                 var proxyUrl = CONFIG.proxyUrl + encodeURIComponent(searchUrl);
                 
-                // Пробуем несколько подходов к поиску
+                console.log('[LordSerials] URL поиска:', searchUrl);
+                console.log('[LordSerials] Proxy URL:', proxyUrl);
+                
+                // Пробуем через прокси сразу (прямой запрос скорее всего заблокирует CORS)
                 $.ajax({
-                    url: CONFIG.baseUrl + '/index.php?do=search&subaction=search&story=' + encodeURIComponent(query),
+                    url: proxyUrl,
                     type: 'GET',
-                    xhrFields: {
-                        withCredentials: true
-                    },
+                    timeout: 10000,
                     success: function(data) {
-                        console.log('[LordSerials] Поиск успешен');
+                        console.log('[LordSerials] Поиск успешен, данных:', data ? data.length : 0);
                         parseSearchResults(data);
                     },
                     error: function(xhr, status, error) {
-                        console.error('[LordSerials] Ошибка поиска:', error);
-                        // Пробуем через прокси
-                        $.ajax({
-                            url: proxyUrl,
-                            type: 'GET',
-                            success: function(data) {
-                                console.log('[LordSerials] Поиск через прокси успешен');
-                                parseSearchResults(data);
-                            },
-                            error: function(xhr2, status2, error2) {
-                                console.error('[LordSerials] Ошибка прокси:', error2);
-                                self.activity.loader(false);
-                                Lampa.Noty.show('Ошибка поиска. Сайт может быть недоступен.');
-                            }
-                        });
+                        console.error('[LordSerials] Ошибка поиска:', status, error);
+                        console.error('[LordSerials] Response:', xhr.responseText);
+                        self.activity.loader(false);
+                        Lampa.Noty.show('Ошибка поиска. Сайт может быть недоступен.');
                     }
                 });
             }
 
             function parseSearchResults(html) {
+                console.log('[LordSerials] Парсим результаты поиска');
                 var results = [];
                 var $html = $(html);
                 
-                // Ищем карточки сериалов
-                $html.find('.shortstory, .movie-card, .serial-card').each(function() {
-                    var card = $(this);
-                    var title = card.find('.title, h2, a').first().text().trim();
-                    var link = card.find('a').first().attr('href');
-                    var image = card.find('img').first().attr('src') || card.find('img').first().attr('data-src');
-                    var description = card.find('.description, .info, .meta').first().text().trim();
-                    
-                    if (title && link) {
-                        // Исправляем URL если относительный
-                        if (link.startsWith('/')) {
-                            link = CONFIG.baseUrl + link;
-                        }
-                        
-                        results.push({
-                            title: title,
-                            url: link,
-                            image: image || 'https://via.placeholder.com/200x300?text=No+Image',
-                            description: description
-                        });
-                    }
-                });
+                // Ищем карточки сериалов - разные возможные селекторы
+                var selectors = [
+                    '.shortstory',
+                    '.movie-card', 
+                    '.serial-card',
+                    '.film-card',
+                    '.movie-item',
+                    '[itemtype*="Movie"]',
+                    'a[href*="/serials/"]',
+                    'a[href*="/serial/"]'
+                ];
                 
-                // Если не нашли стандартные классы, пробуем другие
-                if (results.length === 0) {
-                    $html.find('a').each(function() {
-                        var link = $(this);
-                        var href = link.attr('href');
-                        if (href && (href.includes('/serials/') || href.includes('/serial/'))) {
-                            var title = link.text().trim() || link.find('img').attr('alt') || 'Без названия';
-                            var image = link.find('img').first().attr('src') || link.find('img').first().attr('data-src');
-                            
-                            if (href.startsWith('/')) {
-                                href = CONFIG.baseUrl + href;
+                selectors.forEach(function(selector) {
+                    $html.find(selector).each(function() {
+                        var card = $(this);
+                        var title = card.find('.title, h2, h3, a').first().text().trim();
+                        var link = card.attr('href') || card.find('a').first().attr('href');
+                        var image = card.find('img').first().attr('src') || card.find('img').first().attr('data-src');
+                        var description = card.find('.description, .info, .meta, .year').first().text().trim();
+                        
+                        if (title && link) {
+                            // Исправляем URL если относительный
+                            if (link.startsWith('/')) {
+                                link = CONFIG.baseUrl + link;
                             }
                             
                             // Проверяем дубликаты
-                            var exists = results.some(r => r.url === href);
-                            if (!exists && title !== 'Без названия') {
+                            var exists = results.some(r => r.url === link);
+                            if (!exists) {
                                 results.push({
                                     title: title,
-                                    url: href,
+                                    url: link,
                                     image: image || 'https://via.placeholder.com/200x300?text=No+Image',
-                                    description: ''
+                                    description: description
                                 });
                             }
                         }
                     });
-                }
+                });
                 
+                console.log('[LordSerials] Найдено результатов:', results.length);
                 searchResults = results;
                 displayResults(results);
                 self.activity.loader(false);
             }
 
             function displayResults(results) {
+                console.log('[LordSerials] Отображаем результаты:', results.length);
                 var resultsContainer = $('#lordserials-results');
                 resultsContainer.empty();
                 
                 if (results.length === 0) {
-                    resultsContainer.html('<p style="grid-column:1/-1;text-align:center;padding:40px;">Ничего не найдено</p>');
+                    resultsContainer.html('<p style="grid-column:1/-1;text-align:center;padding:40px;color:#888;">Ничего не найдено. Попробуйте другой запрос.</p>');
                     return;
                 }
                 
@@ -248,14 +347,31 @@
             }
 
             function createResultCard(item, index) {
-                var card = $('<div class="card" style="cursor:pointer;" data-index="' + index + '">' +
+                var card = $('<div class="card lordserials-card" style="cursor:pointer;" data-index="' + index + '">' +
                     '<div class="card-poster" style="position:relative;padding-bottom:150%;background:#1a1a1a;border-radius:8px;overflow:hidden;">' +
                     '<img src="' + item.image + '" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;" onerror="this.src=\'https://via.placeholder.com/200x300?text=No+Image\'">' +
                     '</div>' +
-                    '<div class="card-title" style="margin-top:10px;font-size:14px;font-weight:600;line-height:1.3;">' + item.title + '</div>' +
+                    '<div class="card-title" style="margin-top:10px;font-size:14px;font-weight:600;line-height:1.3;color:#fff;">' + item.title + '</div>' +
                     '</div>');
                 
-                card.on('hover:enter', function() {
+                card.on('hover:enter', function(e) {
+                    e.preventDefault();
+                    console.log('[LordSerials] Выбор карточки:', item.title);
+                    Lampa.Activity.push({
+                        url: 'lordserials_serial',
+                        title: item.title,
+                        component: 'lordserials_serial',
+                        data: {
+                            url: item.url,
+                            title: item.title,
+                            image: item.image
+                        }
+                    });
+                });
+                
+                card.on('click', function(e) {
+                    e.preventDefault();
+                    console.log('[LordSerials] Клик по карточке:', item.title);
                     Lampa.Activity.push({
                         url: 'lordserials_serial',
                         title: item.title,
@@ -271,13 +387,8 @@
                 return card;
             }
         });
-
-        // Добавим шаблон
-        Lampa.Template.add('lordserials_search_template', 
-            '<div class="activity" id="lordserials-search-activity">' +
-            '<div class="activity__content" style="background:#0f0f0f;min-height:100vh;"></div>' +
-            '</div>'
-        );
+        
+        console.log('[LordSerials] Компонент поиска зарегистрирован');
     }
 
     // ============================================
