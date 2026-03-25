@@ -1,15 +1,15 @@
 {
-  "name": "Мои внешние субтитры",
-  "description": "Плагин для загрузки и подключения внешних субтитров прямо из плеера.",
+  "name": "LordSerials",
+  "description": "Поиск и просмотр сериалов с lordserials.fan",
   "version": "1.0.0",
-  "author": "YourName",
+  "author": "Lampa Plugin",
   "type": "user",
-  "icon": "https://cdn-icons-png.flaticon.com/512/2115/2115949.png",
+  "icon": "https://cdn-icons-png.flaticon.com/512/20/20610.png",
   "item": [
     {
-      "name": "Субтитры",
-      "description": "Настройка источников субтитров",
-      "url": "mysubtitles"
+      "name": "LordSerials",
+      "description": "Сериалы с lordserials.fan",
+      "url": "lordserials"
     }
   ]
 }
