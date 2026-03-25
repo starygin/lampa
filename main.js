@@ -162,18 +162,25 @@
 
             this.create = function() {
                 console.log('[LordSerials] Component create вызван');
-                self.activity.loader(true);
+                self.activity.loader(false);
                 
-                // Создаем интерфейс поиска
+                // Создаем простой HTML для теста
                 mainContainer = createSearchInterface();
                 
-                self.activity.loader(false);
+                console.log('[LordSerials] mainContainer:', mainContainer);
+                console.log('[LordSerials] mainContainer.length:', mainContainer ? mainContainer.length : 'null');
+                console.log('[LordSerials] mainContainer.html():', mainContainer ? mainContainer.html().substring(0, 200) : 'null');
                 console.log('[LordSerials] Component create завершен');
             };
 
             this.render = function() {
                 console.log('[LordSerials] Component render вызван');
-                return mainContainer || $('<div class="activity"><div class="activity__content">Загрузка...</div></div>');
+                console.log('[LordSerials] Возвращаем mainContainer:', mainContainer);
+                if (!mainContainer) {
+                    console.log('[LordSerials] Создаем дефолтный контейнер');
+                    mainContainer = $('<div class="activity"><div class="activity__content" style="padding:20px;color:white;"><h1>LordSerials</h1><p>Плагин загружен!</p></div></div>');
+                }
+                return mainContainer;
             };
 
             this.start = function() {
@@ -191,62 +198,72 @@
             };
 
             function createSearchInterface() {
-                console.log('[LordSerials] Создаем интерфейс поиска');
+                console.log('[LordSerials] Создаем интерфейс поиска - START');
                 
-                var wrapper = $('<div class="activity"><div class="activity__content" style="background:#0f0f0f;min-height:100vh;padding:20px;"></div></div>');
-                var container = $('<div id="lordserials-search-container" style="max-width:1200px;margin:0 auto;"></div>');
+                // Простая структура для теста
+                var html = '<div class="activity">' +
+                    '<div class="activity__content" style="background:#0f0f0f;min-height:100vh;padding:20px;">' +
+                    '<h1 style="color:white;font-size:28px;margin-bottom:20px;">Поиск сериалов</h1>' +
+                    '<input type="text" id="lordserials_search_input" placeholder="Введите название сериала..." style="width:100%;padding:15px;font-size:18px;background:#1a1a1a;color:#fff;border:1px solid #333;border-radius:8px;margin-bottom:15px;">' +
+                    '<button id="lordserials_search_btn" style="padding:15px 40px;font-size:16px;background:#e50914;color:#fff;border:none;border-radius:8px;cursor:pointer;">Найти</button>' +
+                    '<div id="lordserials-results" style="margin-top:30px;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:20px;"></div>' +
+                    '</div>' +
+                    '</div>';
                 
-                // Заголовок
-                var header = $('<h1 style="font-size:28px;font-weight:700;margin-bottom:30px;color:#fff;">Поиск сериалов</h1>');
-                container.append(header);
-
-                // Поле ввода поиска
-                var searchBox = $('<div class="settings-input" style="margin-bottom:30px;">' +
-                    '<input type="text" id="lordserials_search_input" class="settings-input__field" placeholder="Введите название сериала..." style="width:100%;padding:15px;font-size:18px;background:#1a1a1a;color:#fff;border:1px solid #333;border-radius:8px;">' +
-                    '<button id="lordserials_search_btn" class="settings-input__button" style="margin-top:15px;padding:15px 40px;font-size:16px;background:#e50914;color:#fff;border:none;border-radius:8px;cursor:pointer;">Найти</button>' +
-                    '</div>');
-
-                container.append(searchBox);
-
-                // Результаты поиска
-                var resultsGrid = $('<div id="lordserials-results" class="cards-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:20px;"></div>');
-                container.append(resultsGrid);
+                var wrapper = $(html);
                 
-                wrapper.find('.activity__content').append(container);
-
-                // Обработчик поиска - используем jQuery.on('click')
+                console.log('[LordSerials] wrapper создан:', wrapper.length);
+                console.log('[LordSerials] wrapper.html():', wrapper.html().substring(0, 100));
+                
+                // Обработчики
                 setTimeout(function() {
-                    console.log('[LordSerials] Вешаем обработчики на кнопку поиска');
+                    console.log('[LordSerials] Вешаем обработчики');
                     
-                    searchBox.find('#lordserials_search_btn').on('click', function(e) {
-                        e.preventDefault();
-                        var query = searchBox.find('#lordserials_search_input').val().trim();
-                        console.log('[LordSerials] Клик по кнопке поиска, query:', query);
-                        if (query.length > 0) {
-                            performSearch(query);
-                        }
-                    });
-
-                    // Поддержка Enter
-                    searchBox.find('#lordserials_search_input').on('keydown', function(e) {
-                        if (e.keyCode === 13) {
-                            var query = $(this).val().trim();
-                            console.log('[LordSerials] Enter нажат, query:', query);
-                            if (query.length > 0) {
+                    var btn = document.getElementById('lordserials_search_btn');
+                    var input = document.getElementById('lordserials_search_input');
+                    
+                    console.log('[LordSerials] btn:', btn);
+                    console.log('[LordSerials] input:', input);
+                    
+                    if (btn) {
+                        btn.addEventListener('click', function() {
+                            var query = input ? input.value.trim() : '';
+                            console.log('[LordSerials] Клик по кнопке, query:', query);
+                            if (query && query.length > 0) {
                                 performSearch(query);
                             }
-                        }
-                    });
+                        });
+                    }
                     
-                    // Автофокус на поле ввода
-                    searchBox.find('#lordserials_search_input').focus();
-                }, 100);
-
+                    if (input) {
+                        input.addEventListener('keydown', function(e) {
+                            if (e.keyCode === 13) {
+                                var query = input.value.trim();
+                                console.log('[LordSerials] Enter, query:', query);
+                                if (query && query.length > 0) {
+                                    performSearch(query);
+                                }
+                            }
+                        });
+                        input.focus();
+                    }
+                }, 500);
+                
+                console.log('[LordSerials] Создаем интерфейс поиска - END');
                 return wrapper;
             }
 
             function performSearch(query) {
-                console.log('[LordSerials] Выполняем поиск:', query);
+                console.log('[LordSerials] performSearch вызван с query:', query);
+                console.log('[LordSerials] self:', self);
+                console.log('[LordSerials] self.activity:', self.activity);
+                
+                if (!self || !self.activity) {
+                    console.error('[LordSerials] self.activity не найден!');
+                    alert('Ошибка: self.activity не найден');
+                    return;
+                }
+                
                 self.activity.loader(true);
                 
                 // Используем прокси для обхода CORS
