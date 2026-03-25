@@ -181,9 +181,8 @@
                 Lampa.Controller.add('lordserials_search', {
                     toggle: function() {
                         console.log('[LordSerials] Controller toggle');
-                        setTimeout(function() {
-                            Lampa.Controller.focus('lordserials_search_input');
-                        }, 100);
+                        // Не используем focus, так как это вызывает ошибку
+                        // Просто активируем контроллер
                     },
                     back: function() {
                         console.log('[LordSerials] Controller back');
@@ -240,6 +239,9 @@
                             }
                         }
                     });
+                    
+                    // Автофокус на поле ввода
+                    searchBox.find('#lordserials_search_input').focus();
                 }, 100);
 
                 return wrapper;
@@ -414,9 +416,7 @@
                 Lampa.Controller.add('lordserials_serial', {
                     toggle: function() {
                         console.log('[LordSerials] Controller toggle');
-                        setTimeout(function() {
-                            Lampa.Controller.focus('lordserials_play_button');
-                        }, 100);
+                        // Не используем focus
                     },
                     back: function() {
                         console.log('[LordSerials] Controller back');
