@@ -1,7 +1,7 @@
 {
   "name": "LordSerials",
-  "description": "Поиск и просмотр сериалов с lordserials.fan",
-  "version": "1.0.0",
+  "description": "Поиск сериалов на lordserials.fan и запуск серий в плеере Lampa",
+  "version": "1.1.0",
   "author": "Lampa Plugin",
   "type": "user",
   "icon": "https://cdn-icons-png.flaticon.com/512/20/20610.png",
