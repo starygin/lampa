@@ -21,7 +21,11 @@
         searchUrl: 'https://lordserials.fan/engine/ajax/search.php',
         pluginId: 'lordserials',
         requestTimeout: 15000,
-        searchDebounceMs: 500
+        searchDebounceMs: 500,
+        proxyFallbacks: [
+            'https://api.allorigins.win/raw?url=',
+            'https://api.codetabs.com/v1/proxy?quest='
+        ]
     };
     var PLUGIN_STATE = {
         started: false,
@@ -47,16 +51,54 @@
             timeout: CONFIG.requestTimeout,
             success: function(data) {
                 if (!data || (typeof data === 'string' && data.trim().length < 20)) {
-                    if (onError) onError(null, 'empty_response', 'empty direct response');
-                    return;
+                    console.warn('[LordSerials] Direct empty response, trying proxy fallback');
+                    return requestViaProxyFallback(url, onSuccess, onError, 'empty direct response');
                 }
                 console.log('[LordSerials] Direct request success');
                 onSuccess(data);
             },
             error: function(xhr, status, error) {
-                if (onError) onError(xhr, status, error || 'direct request failed');
+                var reason = status + ': ' + (error || 'direct request failed');
+                console.warn('[LordSerials] Direct request failed, trying proxy fallback:', reason);
+                requestViaProxyFallback(url, onSuccess, onError, reason);
             }
         });
+    }
+
+    function requestViaProxyFallback(url, onSuccess, onError, initialError) {
+        var proxies = CONFIG.proxyFallbacks || [];
+        var index = 0;
+
+        function tryNext(lastError) {
+            if (index >= proxies.length) {
+                if (onError) onError(null, 'proxy_failed', lastError || initialError || 'all proxies failed');
+                return;
+            }
+
+            var proxyBase = proxies[index++];
+            var proxyUrl = proxyBase + encodeURIComponent(url);
+            console.log('[LordSerials] Proxy request URL:', proxyUrl);
+
+            $.ajax({
+                url: proxyUrl,
+                type: 'GET',
+                timeout: CONFIG.requestTimeout,
+                success: function(data) {
+                    if (!data || (typeof data === 'string' && data.trim().length < 20)) {
+                        return tryNext('empty proxy response');
+                    }
+                    console.log('[LordSerials] Proxy request success');
+                    onSuccess(data);
+                },
+                error: function(xhr, status, error) {
+                    var reason = status + ': ' + (error || 'proxy request failed');
+                    console.warn('[LordSerials] Proxy failed:', proxyBase, reason);
+                    tryNext(reason);
+                }
+            });
+        }
+
+        tryNext(initialError || '');
     }
 
     function startPlugin() {
